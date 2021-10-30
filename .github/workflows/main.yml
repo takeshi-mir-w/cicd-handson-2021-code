@@ -8,20 +8,25 @@ env:
 
 jobs:
   build:
-    runs-on: ubuntu-18.04
+    name: GitOps Workflow
+    runs-on: ubuntu-latest
     steps:
-      - name: Checkout the repository
-        uses: actions/checkout@v1
+      - name: Checkout code
+        uses: actions/checkout@v2
+
       - name: GCP Authenticate
         uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
         with:
           version: '275.0.0'
           service_account_email: ${{ secrets.GCP_SERVICE_ACCOUNT_EMAIL }}
           service_account_key: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
+
       - name: Configure docker to use the gcloud cli
         run: gcloud auth configure-docker --quiet
+
       - name: Build a docker image
         run: |
           DOCKER_BUILDKIT=1 docker image build apps/ -t asia.gcr.io/${{ secrets.GCP_PROJECT_ID }}/go-image:${{ github.run_number }}
+
       - name: Push the docker image
         run: docker push asia.gcr.io/${{ secrets.GCP_PROJECT_ID }}/go-image:${{ github.run_number }}
